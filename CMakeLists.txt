@@ -14,6 +14,17 @@ find_program(
 
 message(STATUS "SDCC: ${SDCC_EXECUTABLE}")
 
+# add_custom_command 中的 -I 参数不会被 CLion 的代码模型读取。
+# 显式声明项目与 SDCC MCS-51 头文件目录，供代码补全和静态检查使用。
+get_filename_component(SDCC_BIN_DIR "${SDCC_EXECUTABLE}" DIRECTORY)
+get_filename_component(SDCC_ROOT_DIR "${SDCC_BIN_DIR}" DIRECTORY)
+set(SDCC_MCS51_INCLUDE_DIR "${SDCC_ROOT_DIR}/include/mcs51")
+
+include_directories(
+        "${CMAKE_SOURCE_DIR}/include"
+        "${SDCC_MCS51_INCLUDE_DIR}"
+)
+
 # ============================================================
 # 源文件和编译产物
 # ============================================================
@@ -21,6 +32,22 @@ message(STATUS "SDCC: ${SDCC_EXECUTABLE}")
 set(SOURCES
         ${CMAKE_SOURCE_DIR}/src/main.c
         ${CMAKE_SOURCE_DIR}/src/uart.c
+)
+
+# 仅向 CLion 提供标准 C 目标及头文件搜索路径，不参与默认固件构建。
+# 实际的 8051 固件仍由下方的 SDCC 自定义命令生成。
+add_library(firmware_index STATIC EXCLUDE_FROM_ALL ${SOURCES})
+target_include_directories(
+        firmware_index
+        PRIVATE
+        "${CMAKE_SOURCE_DIR}/include"
+        "${SDCC_MCS51_INCLUDE_DIR}"
+)
+target_compile_options(
+        firmware_index
+        PRIVATE
+        -include
+        "${CMAKE_SOURCE_DIR}/include/clion_sdcc_compat.h"
 )
 
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/firmware)
@@ -101,26 +128,17 @@ add_custom_target(
 )
 
 # ============================================================
-# 使用 stcgal 烧录 STC 单片机
+# 自动识别 CH340 串口并使用 stcgal 烧录 STC 单片机
 # ============================================================
-
-set(
-        STCGAL_PYTHON
-        # 使用虚拟环境中的 Python，避免工程改名导致 stcgal 启动器失效。
-        ${CMAKE_SOURCE_DIR}/.venv/Scripts/python.exe
-)
-
-# 烧录端口不是编译选项，不放进 CMakeCache。
-# 修改此处后只需重新加载 CMake，无需“清除缓存并重新加载”。
-set(STC_PORT COM8)
 
 add_custom_target(
         flash
         COMMAND
-                ${STCGAL_PYTHON}
-                -m stcgal
-                -p ${STC_PORT}
-                ${FIRMWARE}
+                powershell
+                -NoProfile
+                -ExecutionPolicy Bypass
+                -File ${CMAKE_SOURCE_DIR}/cmake/flash_stc.ps1
+                -Firmware ${FIRMWARE}
         DEPENDS firmware
         COMMENT "Flashing firmware to STC MCU on ${STC_PORT}..."
         USES_TERMINAL
