@@ -1,0 +1,39 @@
+# CLion / JetBrains 工程状态
+.idea/
+
+# Python 虚拟环境与缓存
+.venv/
+__pycache__/
+*.py[cod]
+
+# CMake 和 Ninja 构建目录
+cmake-build-*/
+build/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+build.ninja
+.ninja_deps
+.ninja_log
+compile_commands.json
+
+# SDCC 及固件构建产物
+*.asm
+*.bin
+*.hex
+*.ihx
+*.lk
+*.lst
+*.map
+*.mem
+*.rel
+*.rst
+*.sym
+
+# 编辑器和操作系统临时文件
+*.swp
+*.tmp
+*~
+.DS_Store
+Thumbs.db
