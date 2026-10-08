@@ -1,4 +1,10 @@
+#include "app_config.h"
+
+#if APP_TEST_MODE == APP_TEST_MODE_UART
 #include "uart.h"
+#else
+#include "timer_led_test.h"
+#endif
 
 /*
  * 串口回显示例
@@ -10,8 +16,9 @@
  *
  * 串口终端的数据格式固定为 8N1；波特率在 uart_config.h 中配置。
  */
-int main(void)
+void main(void)
 {
+#if APP_TEST_MODE == APP_TEST_MODE_UART
     char received;
 
     uart_init();
@@ -33,6 +40,15 @@ int main(void)
             uart_puts("> ");
         }
     }
+#else
+    /*
+     * Timer0 中断产生短脉冲，使 TX/RX 指示灯轮流闪烁。
+     * 主循环无需延时，LED 的节拍完全由硬件定时器产生。
+     */
+    timer_led_test_init();
+    while (1)
+    {
+    }
+#endif
 
-    return 0;
 }

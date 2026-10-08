@@ -21,6 +21,7 @@ message(STATUS "SDCC: ${SDCC_EXECUTABLE}")
 set(SOURCES
         ${CMAKE_SOURCE_DIR}/src/main.c
         ${CMAKE_SOURCE_DIR}/src/uart.c
+        ${CMAKE_SOURCE_DIR}/src/timer_led_test.c
 )
 
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/firmware)
@@ -28,6 +29,7 @@ set(OBJECT_DIR ${CMAKE_BINARY_DIR}/objects)
 
 set(MAIN_OBJECT ${OBJECT_DIR}/main.rel)
 set(UART_OBJECT ${OBJECT_DIR}/uart.rel)
+set(TIMER_LED_OBJECT ${OBJECT_DIR}/timer_led_test.rel)
 set(FIRMWARE ${OUTPUT_DIR}/firmware.ihx)
 
 # ============================================================
@@ -47,7 +49,9 @@ add_custom_command(
                 ${CMAKE_SOURCE_DIR}/src/main.c
         DEPENDS
                 ${CMAKE_SOURCE_DIR}/src/main.c
+                ${CMAKE_SOURCE_DIR}/include/app_config.h
                 ${CMAKE_SOURCE_DIR}/include/uart.h
+                ${CMAKE_SOURCE_DIR}/include/timer_led_test.h
         COMMENT "Compiling main.c..."
         VERBATIM
 )
@@ -70,6 +74,24 @@ add_custom_command(
         VERBATIM
 )
 
+add_custom_command(
+        OUTPUT ${TIMER_LED_OBJECT}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OBJECT_DIR}
+        COMMAND ${SDCC_EXECUTABLE}
+                -mmcs51
+                --model-small
+                -I${CMAKE_SOURCE_DIR}/include
+                -c
+                -o ${TIMER_LED_OBJECT}
+                ${CMAKE_SOURCE_DIR}/src/timer_led_test.c
+        DEPENDS
+                ${CMAKE_SOURCE_DIR}/src/timer_led_test.c
+                ${CMAKE_SOURCE_DIR}/include/timer_led_test.h
+                ${CMAKE_SOURCE_DIR}/include/timer_led_config.h
+        COMMENT "Compiling timer_led_test.c..."
+        VERBATIM
+)
+
 # ============================================================
 # 链接固件
 # ============================================================
@@ -83,9 +105,11 @@ add_custom_command(
                 -o ${FIRMWARE}
                 ${MAIN_OBJECT}
                 ${UART_OBJECT}
+                ${TIMER_LED_OBJECT}
         DEPENDS
                 ${MAIN_OBJECT}
                 ${UART_OBJECT}
+                ${TIMER_LED_OBJECT}
         COMMENT "Linking 8051 firmware..."
         VERBATIM
 )
@@ -98,6 +122,9 @@ add_custom_target(
                 ${SOURCES}
                 ${CMAKE_SOURCE_DIR}/include/uart.h
                 ${CMAKE_SOURCE_DIR}/include/uart_config.h
+                ${CMAKE_SOURCE_DIR}/include/app_config.h
+                ${CMAKE_SOURCE_DIR}/include/timer_led_test.h
+                ${CMAKE_SOURCE_DIR}/include/timer_led_config.h
 )
 
 # ============================================================
@@ -112,7 +139,7 @@ set(
 
 # 烧录端口不是编译选项，不放进 CMakeCache。
 # 修改此处后只需重新加载 CMake，无需“清除缓存并重新加载”。
-set(STC_PORT COM8)
+set(STC_PORT COM5)
 
 add_custom_target(
         flash
