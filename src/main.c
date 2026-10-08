@@ -10,7 +10,7 @@
  *
  * 串口终端的数据格式固定为 8N1；波特率在 uart_config.h 中配置。
  */
-void main(void)
+int main(void)
 {
     char received;
 
@@ -33,4 +33,6 @@ void main(void)
             uart_puts("> ");
         }
     }
+
+    return 0;
 }

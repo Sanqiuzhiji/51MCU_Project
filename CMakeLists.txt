@@ -110,12 +110,9 @@ set(
         ${CMAKE_SOURCE_DIR}/.venv/Scripts/python.exe
 )
 
-set(
-        STC_PORT
-        COM19
-        CACHE STRING
-        "STC serial port; override with -DSTC_PORT=COMx"
-)
+# 烧录端口不是编译选项，不放进 CMakeCache。
+# 修改此处后只需重新加载 CMake，无需“清除缓存并重新加载”。
+set(STC_PORT COM8)
 
 add_custom_target(
         flash
