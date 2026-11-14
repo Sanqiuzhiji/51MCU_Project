@@ -14,17 +14,6 @@ find_program(
 
 message(STATUS "SDCC: ${SDCC_EXECUTABLE}")
 
-# add_custom_command 中的 -I 参数不会被 CLion 的代码模型读取。
-# 显式声明项目与 SDCC MCS-51 头文件目录，供代码补全和静态检查使用。
-get_filename_component(SDCC_BIN_DIR "${SDCC_EXECUTABLE}" DIRECTORY)
-get_filename_component(SDCC_ROOT_DIR "${SDCC_BIN_DIR}" DIRECTORY)
-set(SDCC_MCS51_INCLUDE_DIR "${SDCC_ROOT_DIR}/include/mcs51")
-
-include_directories(
-        "${CMAKE_SOURCE_DIR}/include"
-        "${SDCC_MCS51_INCLUDE_DIR}"
-)
-
 # ============================================================
 # 源文件和编译产物
 # ============================================================
@@ -32,22 +21,6 @@ include_directories(
 set(SOURCES
         ${CMAKE_SOURCE_DIR}/src/main.c
         ${CMAKE_SOURCE_DIR}/src/uart.c
-)
-
-# 仅向 CLion 提供标准 C 目标及头文件搜索路径，不参与默认固件构建。
-# 实际的 8051 固件仍由下方的 SDCC 自定义命令生成。
-add_library(firmware_index STATIC EXCLUDE_FROM_ALL ${SOURCES})
-target_include_directories(
-        firmware_index
-        PRIVATE
-        "${CMAKE_SOURCE_DIR}/include"
-        "${SDCC_MCS51_INCLUDE_DIR}"
-)
-target_compile_options(
-        firmware_index
-        PRIVATE
-        -include
-        "${CMAKE_SOURCE_DIR}/include/clion_sdcc_compat.h"
 )
 
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/firmware)
@@ -137,7 +110,7 @@ add_custom_target(
                 powershell
                 -NoProfile
                 -ExecutionPolicy Bypass
-                -File ${CMAKE_SOURCE_DIR}/cmake/flash_stc.ps1
+                -File ${CMAKE_SOURCE_DIR}/flash_stc.ps1
                 -Firmware ${FIRMWARE}
         DEPENDS firmware
         COMMENT "Flashing firmware to STC MCU on ${STC_PORT}..."

@@ -1,5 +1,4 @@
 #include <8051.h>
-
 #include "uart.h"
 #include "uart_config.h"
 
@@ -14,7 +13,7 @@
 #define UART_TIMER1_RELOAD \
     (256UL - (UART_FOSC_HZ / 12UL / 32UL / UART_BAUD_RATE))
 
-void uart_init(void)
+void uart_init()
 {
     SCON = 0x50;                 /* 串口模式 1，并允许接收。 */
     TMOD = (TMOD & 0x0F) | 0x20; /* 保留定时器 0，定时器 1使用模式 2。 */
@@ -39,17 +38,15 @@ void uart_putc(char value)
     TI = 0;
 }
 
-char uart_getc(void)
+char uart_getc()
 {
-    char value;
-
     /* 硬件收到一个完整的数据帧后会将 RI 置 1。 */
     while (!RI)
     {
     }
 
     RI = 0;
-    value = SBUF;
+    char value = SBUF;
     return value;
 }
 
